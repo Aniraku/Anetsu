@@ -8,7 +8,7 @@
     "license": { "name": "MIT", "url": "https://opensource.org/licenses/MIT" }
   },
   "servers": [
-    { "url": "https://anetsu.dev", "description": "Production" },
+    { "url": "https://anetsu.is-a.dev", "description": "Production" },
     { "url": "http://localhost:3000", "description": "Local dev" }
   ],
   "paths": {

@@ -17,18 +17,18 @@ Open-source AniList REST + GraphQL API — zero rate limits, full data.
 
 ```bash
 # REST — List anime
-curl https://anetsu.dev/v1/anime?search=naruto&per_page=5
+curl https://anetsu.is-a.dev/v1/anime?search=naruto&per_page=5
 
 # REST — Get anime by ID
-curl https://anetsu.dev/v1/anime/1
+curl https://anetsu.is-a.dev/v1/anime/1
 
 # GraphQL — Query
-curl -X POST https://anetsu.dev/graphql \
+curl -X POST https://anetsu.is-a.dev/graphql \
   -H "Content-Type: application/json" \
   -d '{"query": "{ Media(id: 1) { id title { romaji english } averageScore } }"}'
 
 # Swagger docs
-open https://anetsu.dev/docs
+open https://anetsu.is-a.dev/docs
 ```
 
 ## Endpoints
