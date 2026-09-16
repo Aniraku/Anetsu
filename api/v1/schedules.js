@@ -19,15 +19,48 @@ export default async function handler(req, res) {
 
   try { requireDb(); } catch (e) { return json(res, { error: e.message }, 503, rateLimitHeaders(rl)); }
 
+  const url = new URL(req.url, `https://${req.headers.host}`);
+  const page = Math.max(1, parseInt(url.searchParams.get('page')) || 1);
+  const perPage = Math.min(25, Math.max(1, parseInt(url.searchParams.get('perPage')) || 20));
   const now = Math.floor(Date.now() / 1000);
-  const { data, error } = await supabase.from('anetsu_airing').select('episode, airing_at, anetsu_anime(id, title_romaji, title_english, cover_large, format)').gt('airing_at', now).order('airing_at', { ascending: true }).limit(200);
+
+  const { data, error, count } = await supabase
+    .from('anetsu_airing')
+    .select('*, anetsu_anime!inner(id, title_romaji, title_english, cover_large, format, status, average_score)', { count: 'exact' })
+    .gte('airing_at', now)
+    .order('airing_at', { ascending: true })
+    .range((page - 1) * perPage, page * perPage - 1);
+
   if (error) return json(res, { error: error.message }, 500);
 
-  const schedules = (data || []).map((r) => ({
-    episode: r.episode,
-    airingAt: r.airing_at,
-    media: r.anetsu_anime,
+  const schedule = (data || []).map((entry) => ({
+    id: entry.anime_id,
+    episode: entry.episode,
+    airingAt: entry.airing_at,
+    timeUntilAiring: entry.airing_at - now,
+    media: {
+      id: entry.anetsu_anime?.id || entry.anime_id,
+      title: {
+        romaji: entry.anetsu_anime?.title_romaji || null,
+        english: entry.anetsu_anime?.title_english || null,
+      },
+      coverImage: {
+        large: entry.anetsu_anime?.cover_large || null,
+      },
+      format: entry.anetsu_anime?.format || null,
+      status: entry.anetsu_anime?.status || null,
+      averageScore: entry.anetsu_anime?.average_score || null,
+    },
   }));
 
-  return json(res, { data: schedules }, 200, rateLimitHeaders(rl));
+  return json(res, {
+    data: schedule,
+    pageInfo: {
+      total: count || 0,
+      perPage,
+      currentPage: page,
+      lastPage: Math.ceil((count || 0) / perPage),
+      hasNextPage: page * perPage < (count || 0),
+    },
+  }, 200, rateLimitHeaders(rl));
 }
