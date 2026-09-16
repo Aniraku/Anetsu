@@ -1,0 +1,18 @@
+{
+  "rewrites": [
+    { "source": "/v1/anime/:id", "destination": "/api/v1/anime/[id]" },
+    { "source": "/v1/:path*", "destination": "/api/v1/:path*" },
+    { "source": "/graphql", "destination": "/api/graphql" },
+    { "source": "/docs", "destination": "/docs/index.html" },
+    { "source": "/docs/openapi.json", "destination": "/docs/openapi.json" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
+  ]
+}

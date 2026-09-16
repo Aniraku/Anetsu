@@ -1,0 +1,150 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Anetsu API",
+    "description": "Open-source AniList REST + GraphQL API — zero rate limits, full data.",
+    "version": "1.0.0",
+    "contact": { "name": "Anetsu", "url": "https://github.com/Aniraku/Anetsu" },
+    "license": { "name": "MIT", "url": "https://opensource.org/licenses/MIT" }
+  },
+  "servers": [
+    { "url": "https://anetsu.dev", "description": "Production" },
+    { "url": "http://localhost:3000", "description": "Local dev" }
+  ],
+  "paths": {
+    "/v1": {
+      "get": {
+        "tags": ["Info"],
+        "summary": "API info",
+        "description": "Returns total anime count, available genres, and all endpoint paths.",
+        "responses": { "200": { "description": "API info" } }
+      }
+    },
+    "/v1/anime": {
+      "get": {
+        "tags": ["Anime"],
+        "summary": "List anime",
+        "description": "Search and filter the anime database. Supports pagination, genre/status/format/season filters, and multiple sort options.",
+        "parameters": [
+          { "name": "search", "in": "query", "description": "Search by title (romaji, english, native)", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 25, "maximum": 50 } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["FINISHED", "RELEASING", "NOT_YET_RELEASED", "CANCELLED", "HIATUS"] } },
+          { "name": "format", "in": "query", "schema": { "type": "string", "enum": ["TV", "TV_SHORT", "MOVIE", "SPECIAL", "OVA", "ONA", "MUSIC"] } },
+          { "name": "season", "in": "query", "schema": { "type": "string", "enum": ["WINTER", "SPRING", "SUMMER", "FALL"] } },
+          { "name": "season_year", "in": "query", "schema": { "type": "integer" } },
+          { "name": "genre", "in": "query", "description": "Filter by genre name", "schema": { "type": "string" } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["POPULARITY_DESC", "SCORE_DESC", "START_DATE_DESC", "TITLE_ROMAJI", "TRENDING_DESC"] } },
+          { "name": "adult", "in": "query", "description": "Set to 'true' to include adult content", "schema": { "type": "string", "enum": ["true", "false"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Anime list with pagination",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Anime" } }, "pagination": { "$ref": "#/components/schemas/Pagination" } } } } }
+          },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/v1/anime/{id}": {
+      "get": {
+        "tags": ["Anime"],
+        "summary": "Get anime by ID",
+        "description": "Fetch a single anime by its AniList ID. Returns full details including characters, relations, recommendations, and airing schedule.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "AniList anime ID" }
+        ],
+        "responses": {
+          "200": { "description": "Anime details", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Anime" } } } } } },
+          "404": { "description": "Anime not found" }
+        }
+      }
+    },
+    "/v1/genres": {
+      "get": {
+        "tags": ["Genres"],
+        "summary": "List all genres",
+        "description": "Returns all unique genre names in the database.",
+        "responses": { "200": { "description": "Genre list", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "type": "string" } } } } } } } }
+      }
+    },
+    "/v1/seasons": {
+      "get": {
+        "tags": ["Seasons"],
+        "summary": "Seasonal anime",
+        "description": "Get anime for a specific season and year.",
+        "parameters": [
+          { "name": "season", "in": "query", "schema": { "type": "string", "enum": ["WINTER", "SPRING", "SUMMER", "FALL"] } },
+          { "name": "year", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "Seasonal anime list" } }
+      }
+    },
+    "/v1/schedules": {
+      "get": {
+        "tags": ["Schedules"],
+        "summary": "Airing schedule",
+        "description": "Get upcoming airing episodes.",
+        "responses": { "200": { "description": "Airing schedule" } }
+      }
+    },
+    "/graphql": {
+      "post": {
+        "tags": ["GraphQL"],
+        "summary": "GraphQL endpoint",
+        "description": "Full AniList-compatible GraphQL API. Supports queries, fragments, variables, and aliases.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "query": { "type": "string" }, "variables": { "type": "object" }, "operationName": { "type": "string" } } } } }
+        },
+        "responses": { "200": { "description": "GraphQL response" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Anime": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "id_mal": { "type": "integer" },
+          "title_romaji": { "type": "string" },
+          "title_english": { "type": "string" },
+          "title_native": { "type": "string" },
+          "description": { "type": "string" },
+          "cover_large": { "type": "string" },
+          "format": { "type": "string" },
+          "status": { "type": "string" },
+          "episodes": { "type": "integer" },
+          "duration": { "type": "integer" },
+          "average_score": { "type": "integer" },
+          "popularity": { "type": "integer" },
+          "season": { "type": "string" },
+          "season_year": { "type": "integer" },
+          "genres": { "type": "array", "items": { "type": "string" } },
+          "characters": { "type": "array" },
+          "relations": { "type": "array" },
+          "recommendations": { "type": "array" }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "perPage": { "type": "integer" },
+          "lastPage": { "type": "integer" },
+          "hasNextPage": { "type": "boolean" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "RateLimit": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-RateLimit-Remaining",
+        "description": "120 requests per minute per IP. No API key required."
+      }
+    }
+  }
+}

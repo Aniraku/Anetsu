@@ -1,0 +1,24 @@
+{
+  "name": "anetsu",
+  "version": "1.0.0",
+  "description": "Open-source AniList REST + GraphQL API — zero rate limits, full data",
+  "type": "module",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "push:data": "node scripts/push-to-supabase.js",
+    "generate:docs": "node scripts/generate-swagger.js"
+  },
+  "dependencies": {
+    "graphql": "^16.9.0",
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Aniraku/Anetsu"
+  }
+}
