@@ -84,12 +84,19 @@ function extractGenres(anime) {
 }
 
 function extractAiring(anime) {
-  if (!anime.next_airing_episode) return [];
-  const nae = anime.next_airing_episode;
-  if (nae.episode && nae.airingAt) {
-    return [{ anime_id: anime.id, episode: nae.episode, airing_at: nae.airingAt }];
+  const entries = [];
+  const schedule = anime.airing_schedule || [];
+  for (const ep of schedule) {
+    if (ep.episode && ep.airingAt) {
+      entries.push({ anime_id: anime.id, episode: ep.episode, airing_at: ep.airingAt });
+    }
   }
-  return [];
+  if (!entries.length && anime.next_airing_episode) {
+    const ep = typeof anime.next_airing_episode === 'number' ? anime.next_airing_episode : anime.next_airing_episode.episode;
+    const at = anime.next_airing_at || anime.next_airing_episode?.airingAt;
+    if (ep && at) entries.push({ anime_id: anime.id, episode: ep, airing_at: at });
+  }
+  return entries;
 }
 
 async function pushBatch(table, rows) {
