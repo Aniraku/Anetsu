@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase.js';
+import { supabase, requireDb } from '../../lib/supabase.js';
 import { json } from '../../lib/utils.js';
 import { checkRateLimit, rateLimitHeaders, getClientIp } from '../../lib/rate-limit.js';
 
@@ -16,6 +16,8 @@ export default async function handler(req, res) {
   const ip = getClientIp(req);
   const rl = checkRateLimit(ip);
   if (!rl.allowed) return json(res, { error: 'Rate limit exceeded', retryAfter: rl.resetAt - Math.floor(Date.now() / 1000) }, 429, rateLimitHeaders(rl));
+
+  try { requireDb(); } catch (e) { return json(res, { error: e.message }, 503, rateLimitHeaders(rl)); }
 
   const now = Math.floor(Date.now() / 1000);
   const { data, error } = await supabase.from('anetsu_airing').select('episode, airing_at, anetsu_anime(id, title_romaji, title_english, cover_large, format)').gt('airing_at', now).order('airing_at', { ascending: true }).limit(200);

@@ -1,4 +1,4 @@
-import { supabase } from '../../../lib/supabase.js';
+import { supabase, requireDb } from '../../../lib/supabase.js';
 import { json } from '../../../lib/utils.js';
 import { checkRateLimit, rateLimitHeaders, getClientIp } from '../../../lib/rate-limit.js';
 
@@ -62,6 +62,8 @@ export default async function handler(req, res) {
   const ip = getClientIp(req);
   const rl = checkRateLimit(ip);
   if (!rl.allowed) return json(res, { error: 'Rate limit exceeded', retryAfter: rl.resetAt - Math.floor(Date.now() / 1000) }, 429, rateLimitHeaders(rl));
+
+  try { requireDb(); } catch (e) { return json(res, { error: e.message }, 503, rateLimitHeaders(rl)); }
 
   const url = new URL(req.url, `https://${req.headers.host}`);
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));

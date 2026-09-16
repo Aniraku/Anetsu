@@ -1,5 +1,5 @@
 import { parse, Kind } from 'graphql';
-import { supabase } from '../lib/supabase.js';
+import { supabase, requireDb } from '../lib/supabase.js';
 import { checkRateLimit, rateLimitHeaders, getClientIp } from '../lib/rate-limit.js';
 
 const CORS = {
@@ -203,6 +203,8 @@ export default async function handler(req, res) {
   const ip = getClientIp(req);
   const rl = checkRateLimit(ip);
   if (!rl.allowed) return jsonRes(res, { error: 'Rate limit exceeded' }, 429, rateLimitHeaders(rl));
+
+  try { requireDb(); } catch (e) { return jsonRes(res, { error: e.message }, 503, rateLimitHeaders(rl)); }
 
   if (req.method === 'GET') {
     const parsed = new URL(req.url, `https://${req.headers.host}`);
